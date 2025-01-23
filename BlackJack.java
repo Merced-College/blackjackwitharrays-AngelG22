@@ -19,19 +19,24 @@ public class BlackJack {
     private static final int[] DECK = new int[52];
     private static int currentCardIndex = 0;
 
+    // Andreas: Added variables to store each persons' wins and print them out at the end of the match 
+    public static int playerWins, dealerWins;
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        int playerTotal, dealerTotal;
 
+    do{
         //Calls the method initializeDeck() to set up a new deck of cards
         initializeDeck();
         //Calls the method shuffleDeck() to randomize the set of cards in the deck
         shuffleDeck();
         
         //Calls the method dealInitialPlayerCards() and stores the returned value in playerTotal. This likely deals initial cards to the player and calculates their total.
-        int playerTotal = dealInitialPlayerCards();
+        playerTotal = dealInitialPlayerCards();
         
         ///Calls the method dealInitialPlayerCards() and stores the returned value in dealerTotal. What this likely does is initail cards to the dealer and calculated the total.
-        int dealerTotal = dealInitialDealerCards();
+        dealerTotal = dealInitialDealerCards();
 
         playerTotal = playerTurn(scanner, playerTotal);
         if (playerTotal > 21) {
@@ -45,8 +50,9 @@ public class BlackJack {
         //Calls the method dealerTurn() with the current dealerTotal as an argument. It updates dealerTotal with the new value returned by dealerTurn().
         dealerTotal = dealerTurn(dealerTotal);
         // Calls the method determineWinner() with playerTotal and dealerTotal as arguments. What this likely does is compare the totals and determines the winner of the game.
-        determineWinner(playerTotal, dealerTotal);
+    }while(determineWinner(playerTotal, dealerTotal));
         scanner.close();
+        
     }
     //initializing the deck integers from 0-51
     private static void initializeDeck() {
@@ -67,10 +73,12 @@ public class BlackJack {
         //iterates through the array to print the new randomized numbers 
         //the two print functions below use println so the output is very readable as a player
         //maybe too readable, players can cheat by seeing the later cards in the deck, should be commented out before use
+        /*
         System.out.println("printed deck");
         for (int i = 0; i < DECK.length; i++) {
             System.out.println(DECK[i] + " ");
         }
+        */
     }
     //assigns the player's first two cards, the array has each value randomized then the mod and division operators are used on each array position
     //to find the card's number/royalty and suit, with the results being printed and then returned by the method 
@@ -92,13 +100,14 @@ public class BlackJack {
     private static int playerTurn(Scanner scanner, int playerTotal) {
         //while (true) loop continues until break; which depends on player action 
         while (true) {
-            System.out.println("Your total is " + playerTotal + ". Do you want to hit or stand?");
+            System.out.println("Your total is " + playerTotal + ". Do you want to stand?");
             //detect and operate on player action using scanner and if/else 
             String action = scanner.nextLine().toLowerCase();
             if (action.equals("hit")) {
                 int newCard = dealCard();
                 playerTotal += cardValue(newCard);
-                System.out.println("new card index is " + newCard);
+                //Testing only
+                //System.out.println("new card index is " + newCard);
                 System.out.println("You drew a " + RANKS[newCard] + " of " + SUITS[DECK[currentCardIndex] % 4]);
                 if (playerTotal > 21) {
                     break;
@@ -124,32 +133,63 @@ public class BlackJack {
     }
 
         
-    // the winner has three potential results: player wins tie, and dealer wins    
-    private static void determineWinner(int playerTotal, int dealerTotal) {
+    // the winner has three potential results: player wins tie, and dealer wins
+    private static boolean determineWinner(int playerTotal, int dealerTotal) {
         if (dealerTotal > 21 || playerTotal > dealerTotal) {
+            playerWins++;
             System.out.println("You win!");
+            System.out.println("You: " + playerWins);
+            System.out.println("Dealer: " + dealerWins);
+            return askToPlayAgain();
+                
         } else if (dealerTotal == playerTotal) {
             System.out.println("It's a tie!");
+            return askToPlayAgain();
         } else {
+            dealerWins++;
             System.out.println("Dealer wins!");
+            System.out.println("You: " + playerWins);
+            System.out.println("Dealer: " + dealerWins);
+            return askToPlayAgain();
         }
     }
+    
+    //check if the player wants to play again
+    public static boolean askToPlayAgain(){
+        System.out.println("Play again? Yes/No ");
 
-    //this'll return the remainder of deck size divided by 13        
+        Scanner scanner = new Scanner(System.in);
+        String userResponse = scanner.nextLine();
+        //scanner.close();
+        
+        if (userResponse.equalsIgnoreCase("yes")){
+            //main(new String[0]);
+            return true;
+        } else if (userResponse.equalsIgnoreCase("no")) {
+            System.out.println("Thanks for playing! Goodbye.");
+            return false;
+        } else {
+            System.out.println("Invalid response. Please type \"yes\" or \"no\".");
+            askToPlayAgain();
+        }
+        return true;
+    }
+
+
     private static int dealCard() {
-        return DECK[currentCardIndex++] % 13; //index value is incremented of original value
+        return DECK[currentCardIndex++] % 13; //index value is incremented of original value everytime method is called
     }
-    //return card < 9 ? card + 2 : 10;
-        //he carvValue method returns the card 
-    private static int cardValue(int card) {
-        return card < 9 ? + 2 :  10; // will eiter return array value or a null value card
+    
+        //the cardValue method returns the card 
+    private static int cardValue(int card) { //"card" is the value returned from dealCard method
+        return card < 9 ? + 2 :  10; // the card returned is going to be __+2 if less than nine, otherwise will be 10
     }
- // will either return array value or a null value card    
+ // this method is not used throughout main    
     int linearSearch(int[] numbers, int key) {
         int i = 0;
         for (i = 0; i < numbers.length; i++) {
             if (numbers[i] == key) {
-                return i;
+                return i; //returns original array value or null value
             }
         }
         return -1; // not found
