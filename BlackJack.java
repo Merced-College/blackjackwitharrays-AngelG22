@@ -8,8 +8,57 @@
 import java.util.Random;
 //This code imports the Scanner class, which is used to get user input.
 import java.util.Scanner;
+//(project line 11-14 and 20-24)
+  import java.util.HashMap;
+  import java.util.LinkedList;
+  import java.util.Queue;
 
 public class BlackJack {
+
+    
+
+    // (Project line 11-14 and 20-24))Angel Grajeda-Cervantes: Data structures for player profiles, hand history, and waiting list.
+    static HashMap<String, PlayerProfile> profiles = new HashMap<>();
+    static Queue<String> waitingPlayers = new LinkedList<>();
+    static LinkedList<String> playerHandHistory = new LinkedList<>();
+    static LinkedList<String> dealerHandHistory = new LinkedList<>();
+
+    // (Project line 26-61)Angel Grajeda-Cervantes: Player Profile Management (HashMap)
+public static PlayerProfile getOrCreateProfile(String name) {
+    PlayerProfile profile = profiles.get(name);
+    if (profile == null) {
+        profile = new PlayerProfile(name);
+        profiles.put(name, profile);
+        System.out.println("New profile created for " + name);
+    } else {
+        System.out.println("Welcome back, " + name + "!");
+    }
+    return profile;
+}
+
+// (Project)Angel Grajeda-Cervantes: Waiting List Management (Queue)
+public static void addToWaitingList(java.util.Scanner scanner) {
+    System.out.print("Enter your name to join the waiting list: ");
+    String name = scanner.nextLine();
+    waitingPlayers.add(name);
+    System.out.println(name + " added to the waiting list.");
+}
+
+public static String getNextPlayer() {
+    return waitingPlayers.poll();
+}
+
+// Angel Grajeda-Cervantes: Hand History Tracking (LinkedList)
+public static void addCardToHand(LinkedList<String> hand, String card) {
+    hand.add(card);
+}
+
+public static void showHandHistory() {
+    System.out.println("Player's hand: " + playerHandHistory);
+    System.out.println("Dealer's hand: " + dealerHandHistory);
+    playerHandHistory.clear();
+    dealerHandHistory.clear();
+}
 
     //constants - cannot change theur values
     //Static - I can use these in every function without having to pass them in
@@ -21,39 +70,35 @@ public class BlackJack {
 
     // Andreas: Added variables to store each persons' wins and print them out at the end of the match 
     public static int playerWins, dealerWins;
+//(project line 73-101)
+   public static void main(String[] args) {
+    java.util.Scanner scanner = new java.util.Scanner(System.in);
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        int playerTotal, dealerTotal;
+    // Add player to waiting list
+    addToWaitingList(scanner);
 
-    do{
-        //Calls the method initializeDeck() to set up a new deck of cards
-        initializeDeck();
-        //Calls the method shuffleDeck() to randomize the set of cards in the deck
-        shuffleDeck();
-        
-        //Calls the method dealInitialPlayerCards() and stores the returned value in playerTotal. This likely deals initial cards to the player and calculates their total.
-        playerTotal = dealInitialPlayerCards();
-        
-        ///Calls the method dealInitialPlayerCards() and stores the returned value in dealerTotal. What this likely does is initail cards to the dealer and calculated the total.
-        dealerTotal = dealInitialDealerCards();
+    // Get next player from queue
+    String playerName = getNextPlayer();
+    PlayerProfile profile = getOrCreateProfile(playerName);
 
-        playerTotal = playerTurn(scanner, playerTotal);
-        if (playerTotal > 21) {
-            //Checks if playerTotal is greater than 21, which means the player has busted.
-            System.out.println("You busted! Dealer wins.");
-            //Prints a message to the console saying how the person playing busted an the dealer wins
-            return;
-            //This exits the current method, as the game is over.
-        }
-        
-        //Calls the method dealerTurn() with the current dealerTotal as an argument. It updates dealerTotal with the new value returned by dealerTurn().
-        dealerTotal = dealerTurn(dealerTotal);
-        // Calls the method determineWinner() with playerTotal and dealerTotal as arguments. What this likely does is compare the totals and determines the winner of the game.
-    }while(determineWinner(playerTotal, dealerTotal));
-        scanner.close();
-        
-    }
+    // Minimal round: deal two cards to player and dealer, track in hand history
+    playerHandHistory.clear();
+    dealerHandHistory.clear();
+
+    // Example: just use random cards for demonstration
+    addCardToHand(playerHandHistory, "Ace of Spades");
+    addCardToHand(playerHandHistory, "7 of Hearts");
+    addCardToHand(dealerHandHistory, "10 of Clubs");
+    addCardToHand(dealerHandHistory, "6 of Diamonds");
+
+    // Show hand history
+    showHandHistory();
+
+    // Update profile stats (simulate a win)
+    profile.wins++;
+    profile.chips += 10;
+    System.out.println("Stats for " + playerName + ": Wins: " + profile.wins + ", Losses: " + profile.losses + ", Chips: " + profile.chips);
+}
     //initializing the deck integers from 0-51
     private static void initializeDeck() {
         for (int i = 0; i < DECK.length; i++) {
