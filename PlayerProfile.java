@@ -1,4 +1,4 @@
-// (Project)Angel Grajeda-Cervantes: PlayerProfile class for storing player stats and chips.
+//project line 2-18
 public class PlayerProfile {
     public String name;
     public int wins;
@@ -10,5 +10,9 @@ public class PlayerProfile {
         this.wins = 0;
         this.losses = 0;
         this.chips = 100; // Starting chips
+    }
+
+    public void displayStats() {
+        System.out.println("Stats for " + name + ": Wins: " + wins + ", Losses: " + losses + ", Chips: " + chips);
     }
 }

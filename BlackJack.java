@@ -17,13 +17,13 @@ public class BlackJack {
 
     
 
-    // (Project line 11-14 and 20-24))Angel Grajeda-Cervantes: Data structures for player profiles, hand history, and waiting list.
+    // (Project line 20-24 and 20-24))Angel Grajeda-Cervantes: Data structures for player profiles, hand history, and waiting list.
     static HashMap<String, PlayerProfile> profiles = new HashMap<>();
     static Queue<String> waitingPlayers = new LinkedList<>();
     static LinkedList<String> playerHandHistory = new LinkedList<>();
     static LinkedList<String> dealerHandHistory = new LinkedList<>();
 
-    // (Project line 26-61)Angel Grajeda-Cervantes: Player Profile Management (HashMap)
+    // (Project line 26-62)Angel Grajeda-Cervantes: Player Profile Management (HashMap)
 public static PlayerProfile getOrCreateProfile(String name) {
     PlayerProfile profile = profiles.get(name);
     if (profile == null) {
@@ -36,7 +36,7 @@ public static PlayerProfile getOrCreateProfile(String name) {
     return profile;
 }
 
-// (Project)Angel Grajeda-Cervantes: Waiting List Management (Queue)
+//Angel Grajeda-Cervantes: Waiting List Management (Queue)
 public static void addToWaitingList(java.util.Scanner scanner) {
     System.out.print("Enter your name to join the waiting list: ");
     String name = scanner.nextLine();
@@ -52,6 +52,7 @@ public static String getNextPlayer() {
 public static void addCardToHand(LinkedList<String> hand, String card) {
     hand.add(card);
 }
+
 
 public static void showHandHistory() {
     System.out.println("Player's hand: " + playerHandHistory);
@@ -70,9 +71,9 @@ public static void showHandHistory() {
 
     // Andreas: Added variables to store each persons' wins and print them out at the end of the match 
     public static int playerWins, dealerWins;
-//(project line 73-101)
+//(project line 74-122)
    public static void main(String[] args) {
-    java.util.Scanner scanner = new java.util.Scanner(System.in);
+    Scanner scanner = new Scanner(System.in);
 
     // Add player to waiting list
     addToWaitingList(scanner);
@@ -81,23 +82,43 @@ public static void showHandHistory() {
     String playerName = getNextPlayer();
     PlayerProfile profile = getOrCreateProfile(playerName);
 
-    // Minimal round: deal two cards to player and dealer, track in hand history
-    playerHandHistory.clear();
-    dealerHandHistory.clear();
+    boolean playAgain;
+    do {
+        // Initialize and shuffle the deck
+        initializeDeck();
+        shuffleDeck();
 
-    // Example: just use random cards for demonstration
-    addCardToHand(playerHandHistory, "Ace of Spades");
-    addCardToHand(playerHandHistory, "7 of Hearts");
-    addCardToHand(dealerHandHistory, "10 of Clubs");
-    addCardToHand(dealerHandHistory, "6 of Diamonds");
+        // Deal initial cards
+        int playerTotal = dealInitialPlayerCards();
+        int dealerTotal = dealInitialDealerCards();
 
-    // Show hand history
-    showHandHistory();
+        // Player's turn
+        playerTotal = playerTurn(scanner, playerTotal);
 
-    // Update profile stats (simulate a win)
-    profile.wins++;
-    profile.chips += 10;
-    System.out.println("Stats for " + playerName + ": Wins: " + profile.wins + ", Losses: " + profile.losses + ", Chips: " + profile.chips);
+        // Check if player busted
+        if (playerTotal > 21) {
+            System.out.println("You busted! Dealer wins.");
+            dealerWins++;
+        } else {
+            // Dealer's turn
+            dealerTotal = dealerTurn(dealerTotal);
+
+            // Determine the winner
+        determineWinner(playerTotal, dealerTotal, profile);        }
+
+        // Show hand history
+        showHandHistory();
+
+        // Update and display player stats
+        profile.displayStats();
+
+        // Ask if the player wants to play again
+        playAgain = askToPlayAgain(scanner);
+
+    } while (playAgain);
+
+    System.out.println("Thanks for playing! Goodbye.");
+    scanner.close();
 }
     //initializing the deck integers from 0-51
     private static void initializeDeck() {
@@ -141,94 +162,98 @@ public static void showHandHistory() {
         return cardValue(card1);
     }
     //the 'main' part of the game, inputs are the players input + the total of their current deck
-    //allows player to decide 
+    //Project line 165-189 allows player to decide 
     private static int playerTurn(Scanner scanner, int playerTotal) {
-        //while (true) loop continues until break; which depends on player action 
-        while (true) {
-            System.out.println("Your total is " + playerTotal + ". Do you want to stand?");
-            //detect and operate on player action using scanner and if/else 
-            String action = scanner.nextLine().toLowerCase();
-            if (action.equals("hit")) {
-                int newCard = dealCard();
-                playerTotal += cardValue(newCard);
-                //Testing only
-                //System.out.println("new card index is " + newCard);
-                System.out.println("You drew a " + RANKS[newCard] + " of " + SUITS[DECK[currentCardIndex] % 4]);
-                if (playerTotal > 21) {
-                    break;
-                    //when player total is greater than 21, does not immediately notify of loss but will exit this loop, with next method deciding the outcome of the game.
-                }
-            } else if (action.equals("stand")) {
-                break;
-            } else {
-                System.out.println("Invalid action. Please type 'hit' or 'stand'.");
-            }
-        }
-        return playerTotal;
-    }
-     //the code represents dealers turn who will automatically add a new card to their hand if their hand is <17
-     private static int dealerTurn(int dealerTotal) {
-        while (dealerTotal < 17) {
+    while (true) {
+        System.out.println("Your total is " + playerTotal + ". Do you want to hit or stand?");
+        String action = scanner.nextLine().toLowerCase();
+
+        if (action.equals("hit")) {
             int newCard = dealCard();
-            dealerTotal += cardValue(newCard);
-        }
-        //at most, the highest value added will be 10        
-        System.out.println("Dealer's total is " + dealerTotal);
-        return dealerTotal;
-    }
+            String cardStr = RANKS[newCard] + " of " + SUITS[newCard % 4];
+            addCardToHand(playerHandHistory, cardStr);
 
-        
-    // the winner has three potential results: player wins tie, and dealer wins
-    private static boolean determineWinner(int playerTotal, int dealerTotal) {
-        if (dealerTotal > 21 || playerTotal > dealerTotal) {
-            playerWins++;
-            System.out.println("You win!");
-            System.out.println("You: " + playerWins);
-            System.out.println("Dealer: " + dealerWins);
-            return askToPlayAgain();
-                
-        } else if (dealerTotal == playerTotal) {
-            System.out.println("It's a tie!");
-            return askToPlayAgain();
+            playerTotal += cardValue(newCard);
+            System.out.println("You drew a " + cardStr);
+
+            if (playerTotal > 21) {
+                break; // Player busts
+            }
+        } else if (action.equals("stand")) {
+            break;
         } else {
-            dealerWins++;
-            System.out.println("Dealer wins!");
-            System.out.println("You: " + playerWins);
-            System.out.println("Dealer: " + dealerWins);
-            return askToPlayAgain();
+            System.out.println("Invalid action. Please type 'hit' or 'stand'.");
         }
     }
-    
-    //check if the player wants to play again
-    public static boolean askToPlayAgain(){
-        System.out.println("Play again? Yes/No ");
+    return playerTotal;
+}
+     //Project line 190-202 the code represents dealers turn who will automatically add a new card to their hand if their hand is <17
+    private static int dealerTurn(int dealerTotal) {
+    while (dealerTotal < 17) {
+        int newCard = dealCard();
+        String cardStr = RANKS[newCard] + " of " + SUITS[newCard % 4];
+        addCardToHand(dealerHandHistory, cardStr);
 
-        Scanner scanner = new Scanner(System.in);
-        String userResponse = scanner.nextLine();
-        //scanner.close();
+        dealerTotal += cardValue(newCard);
+        System.out.println("Dealer drew a " + cardStr);
+    }
+    System.out.println("Dealer's total is " + dealerTotal);
+    return dealerTotal;
+}
+
         
-        if (userResponse.equalsIgnoreCase("yes")){
-            //main(new String[0]);
+    // Project line 256-220 the winner has three potential results: player wins tie, and dealer wins
+    private static boolean determineWinner(int playerTotal, int dealerTotal, PlayerProfile profile) {
+    if (dealerTotal > 21 || playerTotal > dealerTotal) {
+        playerWins++;
+        profile.wins++; // Increment player's wins
+        System.out.println("You win!");
+    } else if (dealerTotal == playerTotal) {
+        System.out.println("It's a tie!");
+    } else {
+        dealerWins++;
+        profile.losses++; // Increment player's losses
+        System.out.println("Dealer wins!");
+    }
+    System.out.println("Player Wins: " + playerWins + " | Dealer Wins: " + dealerWins);
+    return true;
+}
+    
+    //Project line 222- 235 check if the player wants to play again
+    public static boolean askToPlayAgain(Scanner scanner) {
+    while (true) {
+        System.out.println("Play again? (yes/no)");
+        String response = scanner.nextLine().toLowerCase();
+        if (response.equals("yes")) {
             return true;
-        } else if (userResponse.equalsIgnoreCase("no")) {
-            System.out.println("Thanks for playing! Goodbye.");
+        } else if (response.equals("no")) {
             return false;
         } else {
-            System.out.println("Invalid response. Please type \"yes\" or \"no\".");
-            askToPlayAgain();
+            System.out.println("Invalid response. Please type 'yes' or 'no'.");
         }
-        return true;
     }
+}
 
-
+//Project line 237-244
     private static int dealCard() {
-        return DECK[currentCardIndex++] % 13; //index value is incremented of original value everytime method is called
+    if (currentCardIndex >= DECK.length) {
+        shuffleDeck(); // Reshuffle the deck if all cards are used
+        currentCardIndex = 0;
     }
+    return DECK[currentCardIndex++] % 13;
+}
     
         //the cardValue method returns the card 
-    private static int cardValue(int card) { //"card" is the value returned from dealCard method
-        return card < 9 ? + 2 :  10; // the card returned is going to be __+2 if less than nine, otherwise will be 10
+    private static int cardValue(int card) {
+    if (card >= 0 && card <= 8) { // Cards 2 through 9
+        return card + 2; // Add 2 because card indices start at 0 (e.g., 0 = 2, 1 = 3, etc.)
+    } else if (card >= 9 && card <= 11) { // Cards Jack, Queen, King
+        return 10; // Face cards are worth 10
+    } else if (card == 12) { // Ace
+        return 11; // Default value for Ace is 11
     }
+    return 0; // Fallback in case of invalid card index
+}
  // this method is not used throughout main    
     int linearSearch(int[] numbers, int key) {
         int i = 0;
